@@ -23,6 +23,14 @@ class State:
     maintenance_mode: bool
 
 def make_navbar(state: State) -> list:
+    '''
+    creates the bar at the top of with all of the buttons.
+    
+    Args:
+        state: State (the current state of the program)
+    Returns:
+        list: (list of all buttons)
+    '''
     nav_items = [
         Button("Dashboard", index),
         Button("Host Roster", host_roster),
@@ -38,6 +46,14 @@ def make_navbar(state: State) -> list:
 
 @route
 def index(state: State) -> Page:
+    '''
+    creates the first page, a dashboard
+    
+    Args:
+        state: State (the current state of the program)
+    Returns:
+        Page: (the dashboard page)
+    '''
     content = make_navbar(state)
     mode_text = "INACTIVE (Normal Operations)"
     if state.maintenance_mode:
@@ -54,6 +70,14 @@ def index(state: State) -> Page:
 
 @route
 def maintenance_page(state: State) -> Page:
+    '''
+    creates maintenance page
+    
+    Args:
+        state: State (the current state of the program)
+    Returns:
+        Page (the updated maintenance page)
+    '''
     content = make_navbar(state)
     status_label = "DISABLED"
     if state.maintenance_mode:
@@ -81,6 +105,16 @@ def maintenance_page(state: State) -> Page:
 
 @route
 def update_admin(state: State, new_admin: str) -> Page:
+    '''
+    updates the admin name
+    
+    Args:
+        state: State (the current state of the program)
+        new_admin: str (the updated name)
+    Returns:
+        Page (updated maintence page with new admin name)
+    '''
+
     if new_admin == "":
         state.status_log = "Error: Admin operator name cannot be blank."
     else:
@@ -91,6 +125,14 @@ def update_admin(state: State, new_admin: str) -> Page:
 
 @route
 def toggle_maintenance(state: State) -> Page:
+    '''
+    turns on or off the maintenance mode, allows for admin change
+    
+    Args:
+        state: State (the current state of the program)
+    Returns:
+        Page (updated maintenance page)
+    '''
     if state.maintenance_mode:
         state.maintenance_mode = False
     else:
@@ -101,6 +143,14 @@ def toggle_maintenance(state: State) -> Page:
 
 @route
 def host_roster(state: State) -> Page:
+    '''
+    creates page with all provisioned hosts listed out.
+    
+    Args:
+        state: State (the current state of the program)
+    Returns:
+        Page (updated host roster page)
+    '''
     content = make_navbar(state)
     content.append(bold("Network Host Roster"))
     content.append("\n")
@@ -138,12 +188,30 @@ def host_roster(state: State) -> Page:
 
 @route
 def apply_os_filter(state: State, os_filter: str) -> Page:
+    '''
+    sets the OS filter to whatever the user selected
+    
+    Args:
+        state: State (the current state of the program)
+        os_filter (the selected filter)
+    Returns:
+        Page: (updated host roster page with the filtered results)
+    '''
     state.selected_os_filter = os_filter
     state.status_log = "Host filter set to: " + os_filter
     return host_roster(state)
 
 @route
 def toggle_patch_status(state: State, target_hostname: str) -> Page:
+    '''
+    sets a host to patched or unpatches
+    
+    Args:
+        state: State (the current state of the program)
+        target_hostname: str (the hostname of the chosen device)
+    Returns:
+        Page: (updated host roster page with the patch toggle applied)
+    '''
     found = False
     for host in state.hosts:
         if host.hostname == target_hostname:
@@ -160,6 +228,14 @@ def toggle_patch_status(state: State, target_hostname: str) -> Page:
 
 @route
 def provision_host_page(state: State) -> Page:
+    '''
+    creates page for user to add hosts
+    
+    Args:
+        state: State (the current state of the program)
+    Returns:
+        Page: (page for user to add hosts)
+    '''
     content = make_navbar(state)
     content.append(bold("Provision New Network Asset"))
     content.append("\n")
@@ -182,6 +258,18 @@ def provision_host_page(state: State) -> Page:
 
 @route
 def save_new_host(state: State, hostname: str, ip_address: str, os_type: str, port_count_str: str, needs_patching: bool, notes: str) -> Page:
+    '''
+    Args:
+        state: State (the current state of the program)
+        hostname (name of device)
+        ip_address (ip of device)
+        os_type (device operating system)
+        port_count_str (number of open ports on the device)
+        needs_patching (T or F of whether device needs patched)
+        notes (anything the user wants to specify)
+    Returns:
+        Page (updated host roster with the new device)
+    '''
     if hostname == "" or ip_address == "":
         state.status_log = "Error: Hostname and IP Address cannot be blank!"
         return provision_host_page(state)
@@ -209,6 +297,14 @@ def save_new_host(state: State, hostname: str, ip_address: str, os_type: str, po
 
 @route
 def vulnerability_audit(state: State) -> Page:
+    '''
+    creates a new page called vulnerability audit
+    
+    Args:
+        state: State (the current state of the program)
+    Returns:
+        Page: (updated audit page)
+    '''
     content = make_navbar(state)
     total_hosts = len(state.hosts)
     total_ports = 0
@@ -239,6 +335,236 @@ initial_state = State(
     "System initialized.",
     False,
 )
+
+
+from drafter import assert_equal
+
+
+# UNIT TESTS FOR ALL FUNCTIONS 
+def test_make_navbar():
+    state = State([], "Alice", "All", "Cache cleared", False)
+    nav = make_navbar(state)
+
+    expected = [
+        Button("Dashboard", index),
+        Button("Host Roster", host_roster),
+        Button("Provision New Host", provision_host_page),
+        Button("Vulnerability Audit", vulnerability_audit),
+        Button("Maintenance", maintenance_page),
+        "\n",
+        bold("[System Log: Cache cleared]"),
+        "\n\n",
+    ]
+    assert_equal(nav, expected)
+
+
+def test_index():
+    host = Host("web-01", "10.0.0.1", "Linux", 2, False, "Web server")
+    state = State([host], "Bob", "All", "", False)
+    page = index(state)
+
+    expected_content = [
+        Button("Dashboard", index),
+        Button("Host Roster", host_roster),
+        Button("Provision New Host", provision_host_page),
+        Button("Vulnerability Audit", vulnerability_audit),
+        Button("Maintenance", maintenance_page),
+        "\n",
+        bold("Network Inventory Database"),
+        "\n",
+        "System Administrator: ",
+        bold("Bob"),
+        "\nMaintenance Window: INACTIVE (Normal Operations)\n",
+        "Total hosts currently monitored: 1",
+    ]
+    assert_equal(page, Page(state, expected_content))
+
+
+def test_maintenance_page():
+    state = State([], "Admin", "All", "", True)
+    page = maintenance_page(state)
+
+    expected_content = [
+        Button("Dashboard", index),
+        Button("Host Roster", host_roster),
+        Button("Provision New Host", provision_host_page),
+        Button("Vulnerability Audit", vulnerability_audit),
+        Button("Maintenance", maintenance_page),
+        "\n",
+        bold("Maintenance Settings"),
+        "\n",
+        "Current Maintenance Status: ",
+        bold("ENABLED"),
+        "\n",
+        Button("Toggle Maintenance Mode", toggle_maintenance),
+        "\n",
+        "--------------------------------------------------\n",
+        bold("Administrator Settings\n"),
+        "System Administrator: Admin\n",
+        "Update Admin Operator Name: ",
+        TextBox("new_admin", "Admin"),
+        Button("Update Name", update_admin),
+    ]
+    assert_equal(page, Page(state, expected_content))
+
+
+def test_update_admin():
+    state = State([], "OldAdmin", "All", "", True)
+    page = update_admin(state, "NewAdmin")
+
+    assert_equal(state.admin_name, "NewAdmin")
+    assert_equal(state.status_log, "Admin operator changed to: NewAdmin")
+    assert_equal(page, maintenance_page(state))
+
+
+def test_toggle_maintenance():
+    state = State([], "Admin", "All", "", False)
+    page = toggle_maintenance(state)
+
+    assert_equal(state.maintenance_mode, True)
+    assert_equal(state.status_log, "Maintenance Mode is now set to: True")
+    assert_equal(page, maintenance_page(state))
+
+
+def test_host_roster():
+    host = Host("gw-01", "192.168.1.1", "Cisco IOS", 1, True, "Core switch")
+    state = State([host], "Admin", "Cisco IOS", "", False)
+    page = host_roster(state)
+
+    expected_content = [
+        Button("Dashboard", index),
+        Button("Host Roster", host_roster),
+        Button("Provision New Host", provision_host_page),
+        Button("Vulnerability Audit", vulnerability_audit),
+        Button("Maintenance", maintenance_page),
+        "\n",
+        bold("Network Host Roster"),
+        "\n",
+        "Filter by Operating System: ",
+        SelectBox("os_filter", OS_FILTER_OPTIONS, "Cisco IOS"),
+        Button("Apply OS Filter", apply_os_filter),
+        "\n",
+        "gw-01 (192.168.1.1) | OS: Cisco IOS",
+        " | Ports: 1 | ",
+        bold("[PATCH REQUIRED]"),
+        "\n",
+        italic("Notes: Core switch"),
+        "\n",
+        "--------------------------------------------------\n",
+        bold("Toggle Patch Status for a Host:\n"),
+        "Enter Exact Hostname: ",
+        TextBox("target_hostname", ""),
+        Button("Toggle Patch Status", toggle_patch_status),
+        "\n",
+    ]
+    assert_equal(page, Page(state, expected_content))
+
+
+def test_apply_os_filter():
+    state = State([], "Admin", "All", "", False)
+    page = apply_os_filter(state, "Linux")
+
+    assert_equal(state.selected_os_filter, "Linux")
+    assert_equal(state.status_log, "Host filter set to: Linux")
+    assert_equal(page, host_roster(state))
+
+
+def test_toggle_patch_status():
+    host = Host("db-01", "10.0.0.5", "Linux", 1, False, "Main DB")
+    state = State([host], "Admin", "All", "", False)
+    page = toggle_patch_status(state, "db-01")
+
+    assert_equal(host.needs_patching, True)
+    assert_equal(state.status_log, "Toggled patch status for: db-01")
+    assert_equal(page, host_roster(state))
+
+
+def test_provision_host_page():
+    state = State([], "Admin", "All", "", False)
+    page = provision_host_page(state)
+
+    expected_content = [
+        Button("Dashboard", index),
+        Button("Host Roster", host_roster),
+        Button("Provision New Host", provision_host_page),
+        Button("Vulnerability Audit", vulnerability_audit),
+        Button("Maintenance", maintenance_page),
+        "\n",
+        bold("Provision New Network Asset"),
+        "\n",
+        "Hostname:\n",
+        TextBox("hostname", "srv-new-01"),
+        "\nIP Address:\n",
+        TextBox("ip_address", "192.168.1.50"),
+        "\nOperating System:\n",
+        SelectBox("os_type", OS_OPTIONS, OS_OPTIONS[0]),
+        "\nOpen Port Count (Estimated):\n",
+        TextBox("port_count_str", "2"),
+        "\nNeeds Patch: ",
+        CheckBox("needs_patching", False),
+        "\nRunning Services & Notes:\n",
+        TextArea("notes", "SSH (22), Web Server (80)"),
+        "\n",
+        Button("Provision Host", save_new_host),
+    ]
+    assert_equal(page, Page(state, expected_content))
+
+
+def test_save_new_host():
+    state = State([], "Admin", "All", "", False)
+    page = save_new_host(
+        state,
+        "backup-01",
+        "192.168.1.99",
+        "Linux",
+        "3",
+        False,
+        "Storage node",
+    )
+
+    expected_host = Host("backup-01", "192.168.1.99", "Linux", 3, False, "Storage node")
+    assert_equal(state.hosts, [expected_host])
+    assert_equal(state.status_log, "Successfully provisioned host: backup-01")
+    assert_equal(page, host_roster(state))
+
+
+def test_vulnerability_audit():
+    host1 = Host("app-01", "10.0.0.10", "Linux", 5, True, "Vulnerable service")
+    host2 = Host("app-02", "10.0.0.11", "Linux", 2, False, "Safe node")
+    state = State([host1, host2], "Admin", "All", "", False)
+    page = vulnerability_audit(state)
+
+    expected_content = [
+        Button("Dashboard", index),
+        Button("Host Roster", host_roster),
+        Button("Provision New Host", provision_host_page),
+        Button("Vulnerability Audit", vulnerability_audit),
+        Button("Maintenance", maintenance_page),
+        "\n",
+        bold("Network Vulnerability Audit"),
+        "\n",
+        "- Monitored Assets: 2\n",
+        "- Total Exposed Open Ports: 7\n",
+        "- Unpatched Assets: 1\n",
+        "- High-Risk Devices (Unpatched and >3 Open Ports): ",
+        bold("1"),
+        "\n",
+    ]
+    assert_equal(page, Page(state, expected_content))
+
+
+
+test_make_navbar()
+test_index()
+test_maintenance_page()
+test_update_admin()
+test_toggle_maintenance()
+test_host_roster()
+test_apply_os_filter()
+test_toggle_patch_status()
+test_provision_host_page()
+test_save_new_host()
+test_vulnerability_audit()
 
 start_server(initial_state)
 
