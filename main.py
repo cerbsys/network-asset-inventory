@@ -6,7 +6,9 @@ OS_FILTER_OPTIONS = ["All", "Linux", "Windows Server", "Cisco IOS", "macOS", "Un
 set_site_information(
     author="Seth",
     description="Network Inventory Database",
-    links="https://github.com/cerbsys/network-asset-inventory/"
+    sources="https://github.com/cerbsys/network-asset-inventory/",
+    planning="",
+    links=""
 )
 @dataclass
 class Host:
