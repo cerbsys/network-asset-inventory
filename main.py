@@ -3,7 +3,11 @@ from drafter import *
 
 OS_OPTIONS = ["Linux", "Windows Server", "Cisco IOS", "macOS", "UnifiOS", "OTHER"]
 OS_FILTER_OPTIONS = ["All", "Linux", "Windows Server", "Cisco IOS", "macOS", "UnifiOS", "OTHER"]
-
+set_site_information(
+    author="Seth",
+    description="Network Inventory Database",
+    links="https://github.com/cerbsys/network-asset-inventory/"
+)
 @dataclass
 class Host:
     hostname: str
