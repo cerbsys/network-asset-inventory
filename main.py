@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from drafter import *
 
+set_website_style("terminal")
+
 OS_OPTIONS = ["Linux", "Windows Server", "Cisco IOS", "macOS", "UnifiOS", "OTHER"]
 OS_FILTER_OPTIONS = ["All", "Linux", "Windows Server", "Cisco IOS", "macOS", "UnifiOS", "OTHER"]
 set_site_information(
